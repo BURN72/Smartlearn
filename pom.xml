@@ -107,6 +107,13 @@
             <version>2.6.0</version>
         </dependency>
 
+        <!-- STRIPE PAYMENT -->
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>26.0.0</version>
+        </dependency>
+
         <!-- DEV -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
