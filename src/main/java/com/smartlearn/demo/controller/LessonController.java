@@ -20,25 +20,29 @@ public class LessonController {
     private final LessonService lessonService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     public ResponseEntity<LessonResponse> createLesson(
             @Valid @RequestBody CreateLessonRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(lessonService.createLesson(request));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<LessonResponse> getLessonById(@PathVariable Long id) {
-        return ResponseEntity.ok(lessonService.getLessonById(id));
-    }
+    // ══ ROUTES SPÉCIFIQUES (AVANT LES ROUTES GÉNÉRIQUES) ══
 
     @GetMapping("/module/{moduleId}")
     public ResponseEntity<List<LessonResponse>> getLessonsByModule(@PathVariable Long moduleId) {
         return ResponseEntity.ok(lessonService.getLessonsByModule(moduleId));
     }
 
+    // ══ ROUTES GÉNÉRIQUES (APRÈS LES ROUTES SPÉCIFIQUES) ══
+
+    @GetMapping("/{id}")
+    public ResponseEntity<LessonResponse> getLessonById(@PathVariable Long id) {
+        return ResponseEntity.ok(lessonService.getLessonById(id));
+    }
+
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     public ResponseEntity<LessonResponse> updateLesson(
             @PathVariable Long id,
             @Valid @RequestBody CreateLessonRequest request) {
@@ -46,7 +50,7 @@ public class LessonController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR') or hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteLesson(@PathVariable Long id) {
         lessonService.deleteLesson(id);
         return ResponseEntity.noContent().build();

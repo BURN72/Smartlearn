@@ -20,25 +20,29 @@ public class ModuleController {
     private final ModuleService moduleService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     public ResponseEntity<ModuleResponse> createModule(
             @Valid @RequestBody CreateModuleRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(moduleService.createModule(request));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ModuleResponse> getModuleById(@PathVariable Long id) {
-        return ResponseEntity.ok(moduleService.getModuleById(id));
-    }
+    // ══ ROUTES SPÉCIFIQUES (AVANT LES ROUTES GÉNÉRIQUES) ══
 
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<ModuleResponse>> getModulesByCourse(@PathVariable Long courseId) {
         return ResponseEntity.ok(moduleService.getModulesByCourse(courseId));
     }
 
+    // ══ ROUTES GÉNÉRIQUES (APRÈS LES ROUTES SPÉCIFIQUES) ══
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ModuleResponse> getModuleById(@PathVariable Long id) {
+        return ResponseEntity.ok(moduleService.getModuleById(id));
+    }
+
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     public ResponseEntity<ModuleResponse> updateModule(
             @PathVariable Long id,
             @Valid @RequestBody CreateModuleRequest request) {
@@ -46,7 +50,7 @@ public class ModuleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR') or hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteModule(@PathVariable Long id) {
         moduleService.deleteModule(id);
         return ResponseEntity.noContent().build();

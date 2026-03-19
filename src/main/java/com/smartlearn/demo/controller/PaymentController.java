@@ -17,10 +17,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<PaymentResponse> getPaymentById(@PathVariable Long id) {
-        return ResponseEntity.ok(paymentService.getPaymentById(id));
-    }
+    // ══ ROUTES SPÉCIFIQUES (AVANT LES ROUTES GÉNÉRIQUES) ══
 
     @GetMapping("/transaction/{transactionId}")
     public ResponseEntity<PaymentResponse> getPaymentByTransactionId(@PathVariable String transactionId) {
@@ -33,7 +30,7 @@ public class PaymentController {
     }
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<PaymentResponse>> getPaymentsByStatus(@PathVariable String status) {
         try {
             PaymentStatus paymentStatus = PaymentStatus.valueOf(status.toUpperCase());
@@ -41,12 +38,6 @@ public class PaymentController {
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Statut de paiement invalide : " + status);
         }
-    }
-
-    @PostMapping("/{id}/refund")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public ResponseEntity<PaymentResponse> refundPayment(@PathVariable Long id) {
-        return ResponseEntity.ok(paymentService.refundPayment(id));
     }
 
     @PostMapping("/confirm/{transactionId}")
@@ -57,6 +48,13 @@ public class PaymentController {
     @PostMapping("/fail/{transactionId}")
     public ResponseEntity<PaymentResponse> failPayment(@PathVariable String transactionId) {
         return ResponseEntity.ok(paymentService.failPayment(transactionId));
+    }
+
+    // ══ ROUTES GÉNÉRIQUES (APRÈS LES ROUTES SPÉCIFIQUES) ══
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PaymentResponse> getPaymentById(@PathVariable Long id) {
+        return ResponseEntity.ok(paymentService.getPaymentById(id));
     }
 
     // ══ Webhook Stripe ══

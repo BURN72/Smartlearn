@@ -34,10 +34,22 @@ public class QuizController {
      * Créer un nouveau quiz
      */
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     public ResponseEntity<QuizResponse> createQuiz(@RequestBody CreateQuizRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(quizService.createQuiz(request));
     }
+
+    // ══ ROUTES SPÉCIFIQUES (AVANT LES ROUTES GÉNÉRIQUES) ══
+
+    /**
+     * Obtenir les quiz d'un cours
+     */
+    @GetMapping("/course/{courseId}")
+    public ResponseEntity<List<QuizResponse>> getQuizzesByCourse(@PathVariable Long courseId) {
+        return ResponseEntity.ok(quizService.getQuizzesByCourse(courseId));
+    }
+
+    // ══ ROUTES GÉNÉRIQUES (APRÈS LES ROUTES SPÉCIFIQUES) ══
 
     /**
      * Obtenir un quiz avec ses questions
@@ -48,18 +60,10 @@ public class QuizController {
     }
 
     /**
-     * Obtenir les quiz d'un cours
-     */
-    @GetMapping("/course/{courseId}")
-    public ResponseEntity<List<QuizResponse>> getQuizzesByCourse(@PathVariable Long courseId) {
-        return ResponseEntity.ok(quizService.getQuizzesByCourse(courseId));
-    }
-
-    /**
      * Mettre à jour un quiz
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     public ResponseEntity<QuizResponse> updateQuiz(@PathVariable Long id, @RequestBody CreateQuizRequest request) {
         return ResponseEntity.ok(quizService.updateQuiz(id, request));
     }
@@ -68,7 +72,7 @@ public class QuizController {
      * Supprimer un quiz
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteQuiz(@PathVariable Long id) {
         quizService.deleteQuiz(id);
         return ResponseEntity.noContent().build();
@@ -78,7 +82,7 @@ public class QuizController {
      * Ajouter une question à un quiz
      */
     @PostMapping("/{quizId}/questions")
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     public ResponseEntity<QuestionResponse> createQuestion(@PathVariable Long quizId, @RequestBody CreateQuestionRequest request) {
         request.setQuizId(quizId);
         return ResponseEntity.status(HttpStatus.CREATED).body(questionService.createQuestion(request));
@@ -96,7 +100,7 @@ public class QuizController {
      * Supprimer une question
      */
     @DeleteMapping("/{quizId}/questions/{questionId}")
-    @PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     public ResponseEntity<Void> deleteQuestion(@PathVariable Long quizId, @PathVariable Long questionId) {
         questionService.deleteQuestion(questionId);
         return ResponseEntity.noContent().build();

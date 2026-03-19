@@ -17,7 +17,7 @@ public class StripeController {
     private final StripeService stripeService;
 
     @PostMapping("/create-payment-intent")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<StripePaymentIntentResponse> createPaymentIntent(
             @RequestParam Long enrollmentId,
             @RequestParam BigDecimal amount) {

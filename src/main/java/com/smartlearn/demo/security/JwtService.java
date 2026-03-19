@@ -29,11 +29,15 @@ public class JwtService {
     // ══ Génération ══
 
     public String generateAccessToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails, accessTokenExpiration);
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("authorities", userDetails.getAuthorities());
+        return generateToken(extraClaims, userDetails, accessTokenExpiration);
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails, refreshTokenExpiration);
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("authorities", userDetails.getAuthorities().stream().map(Object::toString).toList());
+        return generateToken(extraClaims, userDetails, accessTokenExpiration);
     }
 
     private String generateToken(Map<String, Object> extraClaims,

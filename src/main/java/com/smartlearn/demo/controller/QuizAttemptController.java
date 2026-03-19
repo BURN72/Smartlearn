@@ -28,37 +28,20 @@ public class QuizAttemptController {
      * Démarrer une tentative de quiz
      */
     @PostMapping("/start/{quizId}")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<QuizAttemptResponse> startAttempt(@PathVariable Long quizId, Authentication auth) {
         // Obtenir l'ID de l'utilisateur connecté depuis le JWT
         Long studentId = extractUserIdFromAuth(auth);
         return ResponseEntity.status(HttpStatus.CREATED).body(quizAttemptService.startAttempt(quizId, studentId));
     }
 
-    /**
-     * Soumettre les réponses du quiz
-     */
-    @PostMapping("/{attemptId}/submit")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
-    public ResponseEntity<QuizAttemptResponse> submitAnswers(@PathVariable Long attemptId, @RequestBody SubmitQuizAnswersRequest request) {
-        request.setAttemptId(attemptId);
-        return ResponseEntity.ok(quizAttemptService.submitAnswers(request));
-    }
-
-    /**
-     * Obtenir les détails d'une tentative
-     */
-    @GetMapping("/{attemptId}")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
-    public ResponseEntity<QuizAttemptResponse> getAttemptDetails(@PathVariable Long attemptId) {
-        return ResponseEntity.ok(quizAttemptService.getAttemptDetails(attemptId));
-    }
+    // ══ ROUTES SPÉCIFIQUES (AVANT LES ROUTES GÉNÉRIQUES) ══
 
     /**
      * Obtenir toutes les tentatives de l'étudiant connecté
      */
     @GetMapping("/my-attempts")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<List<QuizAttemptResponse>> getMyAttempts(Authentication auth) {
         Long studentId = extractUserIdFromAuth(auth);
         return ResponseEntity.ok(quizAttemptService.getAttemptsByStudent(studentId));
@@ -68,7 +51,7 @@ public class QuizAttemptController {
      * Obtenir les tentatives d'un étudiant pour un cours (admin/instructeur)
      */
     @GetMapping("/quiz/{quizId}/student/{studentId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_INSTRUCTOR')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_INSTRUCTOR')")
     public ResponseEntity<List<QuizAttemptResponse>> getAttemptsByStudentAndQuiz(@PathVariable Long quizId, @PathVariable Long studentId) {
         return ResponseEntity.ok(quizAttemptService.getAttemptsByStudentAndQuiz(studentId, quizId));
     }
@@ -77,9 +60,30 @@ public class QuizAttemptController {
      * Vérifier si un étudiant peut tenter le quiz
      */
     @GetMapping("/{quizId}/can-attempt/{studentId}")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<Boolean> canAttempt(@PathVariable Long quizId, @PathVariable Long studentId) {
         return ResponseEntity.ok(quizAttemptService.canAttempt(quizId, studentId));
+    }
+
+    // ══ ROUTES GÉNÉRIQUES (APRÈS LES ROUTES SPÉCIFIQUES) ══
+
+    /**
+     * Soumettre les réponses du quiz
+     */
+    @PostMapping("/{attemptId}/submit")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<QuizAttemptResponse> submitAnswers(@PathVariable Long attemptId, @RequestBody SubmitQuizAnswersRequest request) {
+        request.setAttemptId(attemptId);
+        return ResponseEntity.ok(quizAttemptService.submitAnswers(request));
+    }
+
+    /**
+     * Obtenir les détails d'une tentative
+     */
+    @GetMapping("/{attemptId}")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<QuizAttemptResponse> getAttemptDetails(@PathVariable Long attemptId) {
+        return ResponseEntity.ok(quizAttemptService.getAttemptDetails(attemptId));
     }
 
     // ══ Helpers ══

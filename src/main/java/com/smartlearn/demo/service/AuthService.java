@@ -27,9 +27,7 @@ public class AuthService {
             throw new RuntimeException("Email déjà utilisé : " + request.getEmail());
         }
 
-        Role role = request.getRole() != null
-                ? Role.valueOf(request.getRole())
-                : Role.ROLE_STUDENT;
+        Role role = parseRole(request.getRole());
 
         User user = User.builder()
                 .name(request.getName())
@@ -98,6 +96,29 @@ public class AuthService {
                 .name(user.getName())
                 .role(user.getRole().name())
                 .build();
+    }
+
+    private Role parseRole(String roleString) {
+        if (roleString == null || roleString.isBlank()) {
+            return Role.ROLE_STUDENT;
+        }
+
+        String normalized = roleString.toUpperCase().trim();
+        
+        // Accepte "INSTRUCTOR" et "ROLE_INSTRUCTOR"
+        if (normalized.equals("INSTRUCTOR")) {
+            normalized = "ROLE_INSTRUCTOR";
+        } else if (normalized.equals("ADMIN")) {
+            normalized = "ROLE_ADMIN";
+        } else if (normalized.equals("STUDENT")) {
+            normalized = "ROLE_STUDENT";
+        }
+
+        try {
+            return Role.valueOf(normalized);
+        } catch (IllegalArgumentException e) {
+            return Role.ROLE_STUDENT;
+        }
     }
 
     public void logout(String refreshToken) {

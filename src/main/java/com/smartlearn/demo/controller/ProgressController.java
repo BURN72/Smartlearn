@@ -29,17 +29,60 @@ public class ProgressController {
      * Marquer une leçon comme complète
      */
     @PostMapping("/mark-complete/{lessonId}")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<ProgressResponse> markLessonComplete(@PathVariable Long lessonId, @RequestParam(required = false) Integer timeSpent, Authentication auth) {
         Long studentId = extractUserIdFromAuth(auth);
         return ResponseEntity.ok(progressService.markLessonComplete(studentId, lessonId, timeSpent));
     }
 
+    // ══ ROUTES SPÉCIFIQUES (AVANT LES ROUTES GÉNÉRIQUES) ══
+
+    /**
+     * Obtenir toute la progression de l'étudiant
+     */
+    @GetMapping("/my-progress")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<List<ProgressResponse>> getMyProgress(Authentication auth) {
+        Long studentId = extractUserIdFromAuth(auth);
+        return ResponseEntity.ok(progressService.getStudentProgress(studentId));
+    }
+
+    /**
+     * Obtenir les certificats de l'étudiant
+     */
+    @GetMapping("/certificates/my-certificates")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<List<CertificateResponse>> getMyCertificates(Authentication auth) {
+        Long studentId = extractUserIdFromAuth(auth);
+        return ResponseEntity.ok(certificateService.getCertificatesByStudent(studentId));
+    }
+
+    /**
+     * Vérifier si l'étudiant a un certificat pour un cours
+     */
+    @GetMapping("/certificates/verify/{courseId}")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<Boolean> hasCertificate(@PathVariable Long courseId, Authentication auth) {
+        Long studentId = extractUserIdFromAuth(auth);
+        return ResponseEntity.ok(certificateService.hasCertificate(studentId, courseId));
+    }
+
+    /**
+     * Obtenir les certificats d'un cours (admin/instructeur)
+     */
+    @GetMapping("/certificates/course/{courseId}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_INSTRUCTOR')")
+    public ResponseEntity<List<CertificateResponse>> getCertificatesByCourse(@PathVariable Long courseId) {
+        return ResponseEntity.ok(certificateService.getCertificatesByCourse(courseId));
+    }
+
+    // ══ ROUTES GÉNÉRIQUES (APRÈS LES ROUTES SPÉCIFIQUES) ══
+
     /**
      * Obtenir la progression du cours
      */
     @GetMapping("/course/{courseId}")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<Integer> getCourseProgress(@PathVariable Long courseId, Authentication auth) {
         Long studentId = extractUserIdFromAuth(auth);
         return ResponseEntity.ok(progressService.calculateCourseProgress(studentId, courseId));
@@ -49,27 +92,17 @@ public class ProgressController {
      * Obtenir les détails de progression d'un cours
      */
     @GetMapping("/course/{courseId}/details")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<List<ProgressResponse>> getCourseProgressDetails(@PathVariable Long courseId, Authentication auth) {
         Long studentId = extractUserIdFromAuth(auth);
         return ResponseEntity.ok(progressService.getCourseProgressDetails(studentId, courseId));
     }
 
     /**
-     * Obtenir toute la progression de l'étudiant
-     */
-    @GetMapping("/my-progress")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
-    public ResponseEntity<List<ProgressResponse>> getMyProgress(Authentication auth) {
-        Long studentId = extractUserIdFromAuth(auth);
-        return ResponseEntity.ok(progressService.getStudentProgress(studentId));
-    }
-
-    /**
      * Obtenir la progression pour une leçon spécifique
      */
     @GetMapping("/lesson/{lessonId}")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
     public ResponseEntity<ProgressResponse> getProgressForLesson(@PathVariable Long lessonId, Authentication auth) {
         Long studentId = extractUserIdFromAuth(auth);
         return ResponseEntity.ok(progressService.getProgressForLesson(studentId, lessonId));
@@ -83,43 +116,12 @@ public class ProgressController {
         return ResponseEntity.ok(progressService.getCompletionPercentage(lessonId));
     }
 
-    // ══ Certificate Endpoints ══
-
-    /**
-     * Obtenir les certificats de l'étudiant
-     */
-    @GetMapping("/certificates/my-certificates")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
-    public ResponseEntity<List<CertificateResponse>> getMyCertificates(Authentication auth) {
-        Long studentId = extractUserIdFromAuth(auth);
-        return ResponseEntity.ok(certificateService.getCertificatesByStudent(studentId));
-    }
-
     /**
      * Obtenir un certificat par son code unique
      */
     @GetMapping("/certificates/{code}")
     public ResponseEntity<CertificateResponse> getCertificateByCode(@PathVariable String code) {
         return ResponseEntity.ok(certificateService.getCertificateByCode(code));
-    }
-
-    /**
-     * Vérifier si l'étudiant a un certificat pour un cours
-     */
-    @GetMapping("/certificates/verify/{courseId}")
-    @PreAuthorize("hasRole('ROLE_STUDENT')")
-    public ResponseEntity<Boolean> hasCertificate(@PathVariable Long courseId, Authentication auth) {
-        Long studentId = extractUserIdFromAuth(auth);
-        return ResponseEntity.ok(certificateService.hasCertificate(studentId, courseId));
-    }
-
-    /**
-     * Obtenir les certificats d'un cours (admin/instructeur)
-     */
-    @GetMapping("/certificates/course/{courseId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_INSTRUCTOR')")
-    public ResponseEntity<List<CertificateResponse>> getCertificatesByCourse(@PathVariable Long courseId) {
-        return ResponseEntity.ok(certificateService.getCertificatesByCourse(courseId));
     }
 
     // ══ Helpers ══
