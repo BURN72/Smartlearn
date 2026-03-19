@@ -37,7 +37,7 @@ public class JwtService {
     public String generateRefreshToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("authorities", userDetails.getAuthorities().stream().map(Object::toString).toList());
-        return generateToken(extraClaims, userDetails, accessTokenExpiration);
+        return generateToken(extraClaims, userDetails, refreshTokenExpiration);
     }
 
     private String generateToken(Map<String, Object> extraClaims,

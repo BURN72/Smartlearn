@@ -10,7 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -39,8 +41,9 @@ public class CourseController {
     @GetMapping("/instructor/my-courses")
     @PreAuthorize("hasAuthority('ROLE_INSTRUCTOR')")
     public ResponseEntity<List<CourseResponse>> getMyInstructorCourses() {
-        // TODO: Get instructor ID from security context
-        return ResponseEntity.ok(List.of());
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        return ResponseEntity.ok(courseService.getCoursesByInstructorEmail(email));
     }
 
     @GetMapping("/status/{status}")

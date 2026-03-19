@@ -209,4 +209,12 @@ public class CourseService {
                 .instructorName(course.getInstructor().getName())
                 .build();
     }
+   
+    public List<CourseResponse> getCoursesByInstructorEmail(String email) {
+        User instructor = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        return courseRepository.findByInstructorId(instructor.getId())
+                .stream().map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
 }
