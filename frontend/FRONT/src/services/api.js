@@ -13,20 +13,36 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status
+    const originalRequest = error.config
+
+    // 401 = token expiré → rafraîchir
+    if (status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
       const refreshToken = localStorage.getItem('refreshToken')
       if (refreshToken) {
         try {
-          const res = await axios.post('http://localhost:8080/api/auth/refresh', { refreshToken })
+          const res = await axios.post(
+            'http://localhost:8080/api/auth/refresh',
+            { refreshToken }
+          )
           localStorage.setItem('accessToken', res.data.accessToken)
-          error.config.headers.Authorization = `Bearer ${res.data.accessToken}`
-          return axios(error.config)
+          if (res.data.refreshToken) {
+            localStorage.setItem('refreshToken', res.data.refreshToken)
+          }
+          originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`
+          return API(originalRequest)
         } catch {
           localStorage.clear()
           window.location.href = '/login'
         }
+      } else {
+        localStorage.clear()
+        window.location.href = '/login'
       }
     }
+
+    // 403 = pas les droits → ne pas déconnecter, laisser la page gérer
     return Promise.reject(error)
   }
 )

@@ -16,7 +16,7 @@ API.interceptors.response.use(
     const status = error.response?.status
     const originalRequest = error.config
 
-    // 401 = token expiré → rafraîchir
+    // Seulement sur 401 ET si pas déjà réessayé
     if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
       const refreshToken = localStorage.getItem('refreshToken')
@@ -27,22 +27,16 @@ API.interceptors.response.use(
             { refreshToken }
           )
           localStorage.setItem('accessToken', res.data.accessToken)
-          if (res.data.refreshToken) {
-            localStorage.setItem('refreshToken', res.data.refreshToken)
-          }
           originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`
-          return API(originalRequest)
+          return axios(originalRequest)
         } catch {
           localStorage.clear()
           window.location.href = '/login'
         }
-      } else {
-        localStorage.clear()
-        window.location.href = '/login'
       }
     }
 
-    // 403 = pas les droits → ne pas déconnecter, laisser la page gérer
+    // 403 = pas les droits → ne pas déconnecter
     return Promise.reject(error)
   }
 )

@@ -36,7 +36,11 @@ export default function Navbar() {
                 Mes cours
               </Link>
             )}
-            <Link to="/dashboard" className="text-gray-600 hover:text-blue-600 text-sm font-medium">
+            <Link to={
+              isAdmin() ? '/admin' :
+                isInstructor() ? '/instructor' :
+                  '/dashboard'
+            } className="text-gray-600 hover:text-blue-600 text-sm font-medium">
               Dashboard
             </Link>
             <div className="flex items-center gap-3">

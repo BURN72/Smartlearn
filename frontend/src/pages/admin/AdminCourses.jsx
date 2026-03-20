@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import API from '../../services/api'
 import Navbar from '../../components/layout/Navbar'
+import { CourseStatus, CourseStatusLabels, CourseStatusColors } from '../../constants/courseStatus'
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('EN_REVISION')
+  const [filter, setFilter] = useState(CourseStatus.EN_REVISION)
 
   useEffect(() => { fetchCourses() }, [filter])
 
@@ -32,14 +33,6 @@ export default function AdminCourses() {
     } catch (err) { console.error(err) }
   }
 
-  const statusColors = {
-    BROUILLON: 'bg-gray-100 text-gray-600',
-    EN_REVISION: 'bg-yellow-100 text-yellow-700',
-    'PUBLIÉ': 'bg-green-100 text-green-700',
-    'REJETÉ': 'bg-red-100 text-red-600',
-    'ARCHIVÉ': 'bg-gray-100 text-gray-500',
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -51,12 +44,12 @@ export default function AdminCourses() {
         </div>
 
         <div className="flex gap-2 mb-6">
-          {['EN_REVISION', 'PUBLIÉ', 'REJETÉ', 'BROUILLON', 'ARCHIVÉ'].map(s => (
-            <button key={s} onClick={() => setFilter(s)}
+          {[CourseStatus.EN_REVISION, CourseStatus.PUBLIE, CourseStatus.REJETE, CourseStatus.BROUILLON, CourseStatus.ARCHIVE].map(s => (
+            <button key={CourseStatusLabels[s]} onClick={() => setFilter(s)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === s ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}>
-              {s.replace('_', ' ')}
+              {CourseStatusLabels[s]}
             </button>
           ))}
         </div>
@@ -73,8 +66,8 @@ export default function AdminCourses() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-semibold text-gray-800 text-lg">{course.courseTitle}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[course.status] || 'bg-gray-100 text-gray-600'}`}>
-                        {course.status}
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${CourseStatusColors[course.status] || 'bg-gray-100 text-gray-600'}`}>
+                        {CourseStatusLabels[course.status] || course.status}
                       </span>
                     </div>
                     <p className="text-sm text-gray-500 mb-1">
@@ -87,7 +80,7 @@ export default function AdminCourses() {
                     </div>
                   </div>
 
-                  {course.status === 'EN_REVISION' && (
+                  {course.status === CourseStatus.EN_REVISION && (
                     <div className="flex gap-2 ml-4">
                       <button onClick={() => handlePublish(course.courseId)}
                         className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition">
