@@ -127,7 +127,7 @@ public class CourseService {
     }
 
     public List<CourseResponse> getPublishedCourses() {
-        return courseRepository.findByStatus(CourseStatus.PUBLIÉ)
+        return courseRepository.findByStatusOrderByCreatedAtDesc(CourseStatus.PUBLIE)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -162,7 +162,7 @@ public class CourseService {
     public void publishCourse(Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Cours non trouvé : " + courseId));
-        course.setStatus(CourseStatus.PUBLIÉ);
+        course.setStatus(CourseStatus.PUBLIE);
         course.setUpdatedAt(LocalDateTime.now());
         courseRepository.save(course);
     }
@@ -178,7 +178,7 @@ public class CourseService {
     public void rejectCourse(Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Cours non trouvé : " + courseId));
-        course.setStatus(CourseStatus.REJETÉ);
+        course.setStatus(CourseStatus.REJETE);
         course.setUpdatedAt(LocalDateTime.now());
         courseRepository.save(course);
     }
@@ -186,7 +186,7 @@ public class CourseService {
     public void archiveCourse(Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Cours non trouvé : " + courseId));
-        course.setStatus(CourseStatus.ARCHIVÉ);
+        course.setStatus(CourseStatus.ARCHIVE);
         course.setUpdatedAt(LocalDateTime.now());
         courseRepository.save(course);
     }

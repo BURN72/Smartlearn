@@ -30,7 +30,7 @@ public class JwtService {
 
     public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("authorities", userDetails.getAuthorities());
+        extraClaims.put("authorities", userDetails.getAuthorities().stream().map(Object::toString).toList());
         return generateToken(extraClaims, userDetails, accessTokenExpiration);
     }
 

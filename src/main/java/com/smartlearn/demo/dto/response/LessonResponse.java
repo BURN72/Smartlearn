@@ -22,7 +22,7 @@ public class LessonResponse {
 
     private Integer duration;
 
-    private Integer order;
+    private Integer orderIndex;
 
     private Boolean isFree;
 

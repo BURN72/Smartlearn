@@ -18,7 +18,7 @@ public class CreateLessonRequest {
     private Integer duration;
 
     @NotNull(message = "L'ordre est obligatoire")
-    private Integer order;
+    private Integer orderIndex;
 
     @NotNull(message = "L'ID du module est obligatoire")
     private Long moduleId;

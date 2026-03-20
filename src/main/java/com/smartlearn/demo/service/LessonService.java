@@ -32,7 +32,7 @@ public class LessonService {
                     .type(lessonType)
                     .content(request.getContent())
                     .duration(request.getDuration())
-                    .order(request.getOrder())
+                    .orderIndex(request.getOrderIndex())
                     .isFree(request.getIsFree() != null ? request.getIsFree() : true)
                     .module(module)
                     .build();
@@ -53,7 +53,7 @@ public class LessonService {
     public List<LessonResponse> getLessonsByModule(Long moduleId) {
         return lessonRepository.findByModuleId(moduleId)
                 .stream()
-                .sorted((l1, l2) -> Integer.compare(l1.getOrder(), l2.getOrder()))
+                .sorted((l1, l2) -> Integer.compare(l1.getOrderIndex(), l2.getOrderIndex()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -65,7 +65,7 @@ public class LessonService {
         if (request.getTitle() != null) lesson.setTitle(request.getTitle());
         if (request.getContent() != null) lesson.setContent(request.getContent());
         if (request.getDuration() != null) lesson.setDuration(request.getDuration());
-        if (request.getOrder() != null) lesson.setOrder(request.getOrder());
+        if (request.getOrderIndex() != null) lesson.setOrderIndex(request.getOrderIndex());
         if (request.getIsFree() != null) lesson.setIsFree(request.getIsFree());
 
         Lesson updated = lessonRepository.save(lesson);
@@ -88,7 +88,7 @@ public class LessonService {
                 .type(lesson.getType())
                 .content(lesson.getContent())
                 .duration(lesson.getDuration())
-                .order(lesson.getOrder())
+                .orderIndex(lesson.getOrderIndex())
                 .isFree(lesson.getIsFree())
                 .moduleId(lesson.getModule().getId())
                 .build();

@@ -13,7 +13,7 @@ public class CreateModuleRequest {
     private String description;
 
     @NotNull(message = "L'ordre est obligatoire")
-    private Integer order;
+    private Integer orderIndex;
 
     @NotNull(message = "L'ID du cours est obligatoire")
     private Long courseId;

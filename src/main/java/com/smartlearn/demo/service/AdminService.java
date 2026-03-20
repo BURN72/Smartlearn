@@ -61,7 +61,7 @@ public class AdminService {
 
         long totalCourses = courseRepository.count();
         long publishedCourses = courseRepository.findAll().stream()
-                .filter(c -> c.getStatus() == CourseStatus.PUBLIÉ)
+                .filter(c -> c.getStatus() == CourseStatus.PUBLIE)
                 .count();
         long draftCourses = courseRepository.findAll().stream()
                 .filter(c -> c.getStatus() == CourseStatus.BROUILLON)

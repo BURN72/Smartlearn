@@ -134,7 +134,7 @@ public class EnrollmentService {
 
         // Si 100%, marquer comme TERMINÉ
         if (progressPercentage >= 100) {
-            enrollment.setStatus(EnrollmentStatus.TERMINÉ);
+            enrollment.setStatus(EnrollmentStatus.TERMINE);
         }
 
         Enrollment updated = enrollmentRepository.save(enrollment);
@@ -148,7 +148,7 @@ public class EnrollmentService {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new RuntimeException("Inscription non trouvée : " + enrollmentId));
 
-        enrollment.setStatus(EnrollmentStatus.ANNULÉ);
+        enrollment.setStatus(EnrollmentStatus.ANNULE);
         Enrollment updated = enrollmentRepository.save(enrollment);
         return mapToResponse(updated);
     }
@@ -160,7 +160,7 @@ public class EnrollmentService {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new RuntimeException("Inscription non trouvée : " + enrollmentId));
 
-        enrollment.setStatus(EnrollmentStatus.REMBOURSÉ);
+        enrollment.setStatus(EnrollmentStatus.REMBOURSE);
         Enrollment updated = enrollmentRepository.save(enrollment);
 
         // Envoyer email de confirmation de remboursement
@@ -196,7 +196,7 @@ public class EnrollmentService {
                 .courseId(enrollment.getCourse().getId())
                 .courseName(enrollment.getCourse().getTitle())
                 .isPaid(enrollment.getStatus() == EnrollmentStatus.ACTIF 
-                        || enrollment.getStatus() == EnrollmentStatus.TERMINÉ)
+                        || enrollment.getStatus() == EnrollmentStatus.TERMINE)
                 .build();
     }
 }

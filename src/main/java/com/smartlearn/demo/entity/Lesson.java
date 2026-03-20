@@ -30,8 +30,8 @@ public class Lesson {
     @Column(name = "duration_minutes")
     private Integer duration;
 
-    @Column(nullable = false)
-    private Integer order;
+    @Column(name = "order_index", nullable = false)
+    private Integer orderIndex;
 
     @Column(name = "is_free")
     @Builder.Default

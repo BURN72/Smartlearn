@@ -1,7 +1,5 @@
 package com.smartlearn.demo.security;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,23 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
-        final String userEmail;
-
-        try {
-            userEmail = jwtService.extractUsername(jwt);
-        } catch (ExpiredJwtException e) {
-            // Token expiré → retourner 401 pour que le frontend rafraîchisse
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Token expiré\"}");
-            return;
-        } catch (JwtException e) {
-            // Token invalide → 401
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Token invalide\"}");
-            return;
-        }
+        final String userEmail = jwtService.extractUsername(jwt);
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
@@ -69,10 +51,6 @@ public class JwtFilter extends OncePerRequestFilter {
                         );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-            } else {
-                // Token invalide → 401
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
             }
         }
 

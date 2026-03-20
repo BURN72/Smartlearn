@@ -30,7 +30,7 @@ public class ModuleService {
         Module module = Module.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .order(request.getOrder())
+                .orderIndex(request.getOrderIndex())
                 .course(course)
                 .build();
 
@@ -47,7 +47,7 @@ public class ModuleService {
     public List<ModuleResponse> getModulesByCourse(Long courseId) {
         return moduleRepository.findByCourseId(courseId)
                 .stream()
-                .sorted((m1, m2) -> Integer.compare(m1.getOrder(), m2.getOrder()))
+                .sorted((m1, m2) -> Integer.compare(m1.getOrderIndex(), m2.getOrderIndex()))
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -58,7 +58,7 @@ public class ModuleService {
 
         if (request.getTitle() != null) module.setTitle(request.getTitle());
         if (request.getDescription() != null) module.setDescription(request.getDescription());
-        if (request.getOrder() != null) module.setOrder(request.getOrder());
+        if (request.getOrderIndex() != null) module.setOrderIndex(request.getOrderIndex());
 
         Module updated = moduleRepository.save(module);
         return mapToResponse(updated);
@@ -79,7 +79,7 @@ public class ModuleService {
                 .id(module.getId())
                 .title(module.getTitle())
                 .description(module.getDescription())
-                .order(module.getOrder())
+                .orderIndex(module.getOrderIndex())
                 .courseId(module.getCourse().getId())
                 .lessons(lessons.stream()
                         .map(lessonService::mapToResponse)

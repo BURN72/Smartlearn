@@ -24,8 +24,8 @@ public class Module {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
-    private Integer order;
+    @Column(name = "order_index", nullable = false)
+    private Integer orderIndex;
 
     // ══ Foreign Keys ══
 

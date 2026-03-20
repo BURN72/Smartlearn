@@ -19,7 +19,7 @@ public class ModuleResponse {
 
     private String description;
 
-    private Integer order;
+    private Integer orderIndex;
 
     private Long courseId;
 

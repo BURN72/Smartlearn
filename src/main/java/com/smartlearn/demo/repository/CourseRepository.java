@@ -21,6 +21,5 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     @Query("SELECT c FROM Course c WHERE c.status = :status AND c.category.id = :categoryId")
     List<Course> findByStatusAndCategory(@Param("status") CourseStatus status, @Param("categoryId") Long categoryId);
 
-    @Query("SELECT c FROM Course c WHERE c.status = 'PUBLIÉ' ORDER BY c.createdAt DESC")
-    List<Course> findPublishedCourses();
+    List<Course> findByStatusOrderByCreatedAtDesc(CourseStatus status);
 }
