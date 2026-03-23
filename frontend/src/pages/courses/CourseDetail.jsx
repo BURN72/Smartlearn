@@ -12,26 +12,93 @@ export default function CourseDetail() {
   const [loading, setLoading] = useState(true)
   const [enrolling, setEnrolling] = useState(false)
   const [message, setMessage] = useState('')
+  const [isEnrolled, setIsEnrolled] = useState(false)
+  const [isInstructor, setIsInstructor] = useState(false)
+  const [enrollment, setEnrollment] = useState(null)
 
   useEffect(() => {
-    API.get(`/courses/${id}`) // ✅ URL correcte → CourseDetailResponse
-      .then(res => setCourse(res.data))
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false))
-  }, [id])
+    const loadData = async () => {
+      try {
+        const courseRes = await API.get(`/courses/${id}`)
+        setCourse(courseRes.data)
+
+        if (user) {
+          // Récupérer les inscriptions de l'étudiant
+          if (user?.role === 'ROLE_STUDENT') {
+            try {
+              const enrollmentsRes = await API.get('/enrollments/me')
+              const enrolled = enrollmentsRes.data.find(e => e.courseId === parseInt(id))
+              if (enrolled) {
+                setIsEnrolled(true)
+                setEnrollment(enrolled)
+              }
+            } catch (err) {
+              console.error('Erreur lors du chargement des inscriptions:', err)
+            }
+          }
+
+          // Vérifier si c'est le cours de l'instructeur
+          if (user?.role === 'ROLE_INSTRUCTOR') {
+            try {
+              const myCoursesRes = await API.get('/courses/instructor/my-courses')
+              const isOwnCourse = myCoursesRes.data.some(c => c.id === parseInt(id))
+              setIsInstructor(isOwnCourse)
+            } catch (err) {
+              console.error('Erreur lors du chargement des cours instructeur:', err)
+            }
+          }
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [id, user])
 
   const handleEnroll = async () => {
     if (!user) { navigate('/login'); return }
     setEnrolling(true)
     setMessage('')
     try {
-      await API.post('/enrollments', { courseId: parseInt(id) }) // ✅ URL correcte
+      await API.post('/enrollments', { courseId: parseInt(id) })
       setMessage('Inscription réussie ! Rendez-vous dans votre dashboard.')
+      setIsEnrolled(true)
     } catch (err) {
       setMessage(err.response?.data?.message || 'Erreur lors de l\'inscription')
     } finally {
       setEnrolling(false)
     }
+  }
+
+  const handleCancelEnrollment = async () => {
+    if (!enrollment) return
+    if (!confirm('Êtes-vous sûr de vouloir annuler votre inscription ?')) return
+    
+    setEnrolling(true)
+    setMessage('')
+    try {
+      // Note: À adapter si l'API a un endpoint spécifique pour annuler l'inscription
+      // Pour l'instant on supprime via PUT avec status ANNULE)
+      await API.post(`/enrollments/${enrollment.id}`, { status: 'ANNULE' })
+      setMessage('Inscription annulée.')
+      setIsEnrolled(false)
+      setEnrollment(null)
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Erreur lors de l\'annulation')
+    } finally {
+      setEnrolling(false)
+    }
+  }
+
+  const handleStartCourse = () => {
+    navigate(`/learn/${id}`)
+  }
+
+  const handleManageCourse = () => {
+    navigate(`/instructor/courses/${id}`)
   }
 
   if (loading) return (
@@ -117,14 +184,38 @@ export default function CourseDetail() {
 
               {message && (
                 <div className={`px-4 py-3 rounded-lg mb-4 text-sm ${
-                  message.includes('réussie') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                  message.includes('réussie') || message.includes('annulée') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
                 }`}>{message}</div>
               )}
 
-              <button onClick={handleEnroll} disabled={enrolling}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 mb-4">
-                {enrolling ? 'Inscription...' : "S'inscrire au cours"}
-              </button>
+              {/* Boutons en fonction de l'état */}
+              {!user ? (
+                <button onClick={() => navigate('/login')} disabled={enrolling}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 mb-4">
+                  Se connecter pour s'inscrire
+                </button>
+              ) : isInstructor ? (
+                <button onClick={handleManageCourse} disabled={enrolling}
+                  className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50 mb-4">
+                  Gérer le cours
+                </button>
+              ) : isEnrolled ? (
+                <div className="space-y-3 mb-4">
+                  <button onClick={handleStartCourse} disabled={enrolling}
+                    className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50">
+                    Commencer le cours
+                  </button>
+                  <button onClick={handleCancelEnrollment} disabled={enrolling}
+                    className="w-full bg-red-50 text-red-600 py-3 rounded-lg font-medium border border-red-200 hover:bg-red-100 transition disabled:opacity-50">
+                    Annuler l'inscription
+                  </button>
+                </div>
+              ) : (
+                <button onClick={handleEnroll} disabled={enrolling}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 mb-4">
+                  {enrolling ? 'Inscription...' : "S'inscrire au cours"}
+                </button>
+              )}
 
               <div className="space-y-2 text-sm text-gray-500">
                 <p>✓ Accès illimité</p>

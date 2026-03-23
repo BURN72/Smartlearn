@@ -25,6 +25,13 @@ export default function AdminUsers() {
     } catch (err) { console.error(err) }
   }
 
+  const handleChangeRole = async (userId, newRole) => {
+    try {
+      await API.put(`/admin/users/${userId}/role`, { role: newRole })
+      fetchUsers()
+    } catch (err) { console.error(err) }
+  }
+
   const roleColors = {
     ROLE_ADMIN: 'bg-red-50 text-red-600',
     ROLE_INSTRUCTOR: 'bg-purple-50 text-purple-600',
@@ -99,10 +106,32 @@ export default function AdminUsers() {
                      u.role === 'ROLE_STUDENT' ? `${u.coursesEnrolled} inscrits` : '—'}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => handleToggleStatus(u.id)}
-                      className={`text-sm font-medium ${u.active ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700'}`}>
-                      {u.active ? 'Désactiver' : 'Activer'}
-                    </button>
+                    <div className="flex gap-2 justify-end">
+                      {u.role !== 'ROLE_ADMIN' && (
+                        <button onClick={() => {
+                          if (confirm(`Promouvoir ${u.name} en admin ?`)) {
+                            handleChangeRole(u.id, 'ROLE_ADMIN')
+                          }
+                        }}
+                          className="text-sm font-medium text-purple-500 hover:text-purple-700">
+                          Promouvoir
+                        </button>
+                      )}
+                      {u.role === 'ROLE_ADMIN' && (
+                        <button onClick={() => {
+                          if (confirm(`Rétrograder ${u.name} (supprimer le rôle admin) ?`)) {
+                            handleChangeRole(u.id, 'ROLE_STUDENT')
+                          }
+                        }}
+                          className="text-sm font-medium text-orange-500 hover:text-orange-700">
+                          Rétrograder
+                        </button>
+                      )}
+                      <button onClick={() => handleToggleStatus(u.id)}
+                        className={`text-sm font-medium ${u.active ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700'}`}>
+                        {u.active ? 'Désactiver' : 'Activer'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

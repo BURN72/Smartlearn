@@ -66,6 +66,16 @@ export default function InstructorDashboard() {
     }
   }
 
+  const handleResubmitAfterRejection = async (courseId) => {
+    try {
+      await API.post(`/courses/${courseId}/submit-review`)
+      setSuccess('Cours renvoyé pour évaluation !')
+      fetchData()
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erreur lors de la résoumission')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -199,6 +209,12 @@ export default function InstructorDashboard() {
                       <button onClick={() => handleSubmitForReview(course.id)}
                         className="bg-yellow-50 text-yellow-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-100 transition">
                         Soumettre
+                      </button>
+                    )}
+                    {course.status === CourseStatus.REJETE && (
+                      <button onClick={() => handleResubmitAfterRejection(course.id)}
+                        className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition">
+                        Republier
                       </button>
                     )}
                     <Link to={`/instructor/courses/${course.id}`}

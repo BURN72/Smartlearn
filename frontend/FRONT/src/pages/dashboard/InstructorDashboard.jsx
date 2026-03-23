@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import API from '../../services/api'
 import Navbar from '../../components/layout/Navbar'
 import { useAuth } from '../../context/AuthContext'
+import { CourseStatus, CourseStatusLabels, CourseStatusColors } from '../../constants/courseStatus'
 
 export default function InstructorDashboard() {
   const { user } = useAuth()
@@ -65,12 +66,14 @@ export default function InstructorDashboard() {
     }
   }
 
-  const statusColors = {
-    BROUILLON: 'bg-gray-100 text-gray-600',
-    EN_REVISION: 'bg-yellow-100 text-yellow-700',
-    'PUBLIÉ': 'bg-green-100 text-green-700',
-    'REJETÉ': 'bg-red-100 text-red-600',
-    'ARCHIVÉ': 'bg-gray-100 text-gray-500',
+  const handleResubmitAfterRejection = async (courseId) => {
+    try {
+      await API.post(`/courses/${courseId}/submit-review`)
+      setSuccess('Cours renvoyé pour évaluation !')
+      fetchData()
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erreur lors de la résoumission')
+    }
   }
 
   return (
@@ -161,13 +164,13 @@ export default function InstructorDashboard() {
           </div>
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 text-center">
             <p className="text-3xl font-bold text-green-500">
-              {courses.filter(c => c.status === 'PUBLIÉ').length}
+              {courses.filter(c => c.status === CourseStatus.PUBLIE).length}
             </p>
             <p className="text-gray-500 text-sm mt-1">Publiés</p>
           </div>
           <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 text-center">
             <p className="text-3xl font-bold text-yellow-500">
-              {courses.filter(c => c.status === 'EN_REVISION').length}
+              {courses.filter(c => c.status === CourseStatus.EN_REVISION).length}
             </p>
             <p className="text-gray-500 text-sm mt-1">En révision</p>
           </div>
@@ -191,8 +194,8 @@ export default function InstructorDashboard() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-semibold text-gray-800 text-lg">{course.title}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[course.status] || 'bg-gray-100 text-gray-600'}`}>
-                        {course.status}
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${CourseStatusColors[course.status] || 'bg-gray-100 text-gray-600'}`}>
+                        {CourseStatusLabels[course.status] || course.status}
                       </span>
                     </div>
                     <p className="text-sm text-gray-500 mb-2">{course.description}</p>
@@ -202,10 +205,16 @@ export default function InstructorDashboard() {
                     </div>
                   </div>
                   <div className="flex gap-2 ml-4">
-                    {course.status === 'BROUILLON' && (
+                    {course.status === CourseStatus.BROUILLON && (
                       <button onClick={() => handleSubmitForReview(course.id)}
                         className="bg-yellow-50 text-yellow-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-100 transition">
                         Soumettre
+                      </button>
+                    )}
+                    {course.status === CourseStatus.REJETE && (
+                      <button onClick={() => handleResubmitAfterRejection(course.id)}
+                        className="bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition">
+                        Republier
                       </button>
                     )}
                     <Link to={`/instructor/courses/${course.id}`}

@@ -18,7 +18,9 @@ export default function Register() {
       const res = await API.post('/auth/register', form)
       const { accessToken, refreshToken, email, name, role } = res.data
       login({ email, name, role }, accessToken, refreshToken)
-      navigate('/dashboard')
+      if (role === 'ROLE_ADMIN') navigate('/admin')
+      else if (role === 'ROLE_INSTRUCTOR') navigate('/instructor')
+      else navigate('/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors de l\'inscription')
     } finally {

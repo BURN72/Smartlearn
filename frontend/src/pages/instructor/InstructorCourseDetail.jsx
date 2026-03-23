@@ -10,10 +10,14 @@ export default function InstructorCourseDetail() {
   const [loading, setLoading] = useState(true)
   const [showModuleForm, setShowModuleForm] = useState(false)
   const [showLessonForm, setShowLessonForm] = useState(null)
+  const [showQuizForm, setShowQuizForm] = useState(null)
   const [moduleForm, setModuleForm] = useState({ title: '', description: '', orderIndex: 1 })
   const [lessonForm, setLessonForm] = useState({
     title: '', type: 'TEXT', content: '',
-    videoUrl: '', durationMinutes: 0, isFree: false
+    videoUrl: '', duration: 0, isFree: false
+  })
+  const [quizForm, setQuizForm] = useState({
+    title: '', description: '', passMark: 70, attempts: 3, timeLimit: 0
   })
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -49,7 +53,7 @@ export default function InstructorCourseDetail() {
       const nextOrder = (module?.lessons?.length || 0) + 1
       await API.post('/lessons', { ...lessonForm, moduleId, orderIndex: nextOrder })
       setMessage('Leçon ajoutée !')
-      setLessonForm({ title: '', type: 'TEXT', content: '', videoUrl: '', durationMinutes: 0, isFree: false })
+      setLessonForm({ title: '', type: 'TEXT', content: '', videoUrl: '', duration: 0, isFree: false })
       setShowLessonForm(null)
       fetchCourse()
     } catch (err) {
@@ -71,6 +75,23 @@ export default function InstructorCourseDetail() {
       await API.delete(`/lessons/${lessonId}`)
       fetchCourse()
     } catch (err) { console.error(err) }
+  }
+
+  const handleAddQuiz = async (e, moduleId) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await API.post('/quizzes', { 
+        ...quizForm, 
+        moduleId: parseInt(moduleId)
+      })
+      setMessage('Quiz créé avec succès !')
+      setQuizForm({ title: '', description: '', passMark: 70, attempts: 3, timeLimit: 0 })
+      setShowQuizForm(null)
+      fetchCourse()
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Erreur lors de la création du quiz')
+    } finally { setSaving(false) }
   }
 
   if (loading) return <div className="min-h-screen bg-gray-50"><Navbar /><div className="text-center py-20 text-gray-400">Chargement...</div></div>
@@ -138,6 +159,10 @@ export default function InstructorCourseDetail() {
                     className="bg-green-50 text-green-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-green-100">
                     + Leçon
                   </button>
+                  <button onClick={() => setShowQuizForm(showQuizForm === module.id ? null : module.id)}
+                    className="bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-purple-100">
+                    + Quiz
+                  </button>
                   <button onClick={() => handleDeleteModule(module.id)}
                     className="bg-red-50 text-red-500 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-100">
                     Supprimer
@@ -170,8 +195,8 @@ export default function InstructorCourseDetail() {
                         onChange={e => setLessonForm({ ...lessonForm, content: e.target.value })}
                         className="col-span-2 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                     )}
-                    <input type="number" placeholder="Durée (min)" value={lessonForm.durationMinutes}
-                      onChange={e => setLessonForm({ ...lessonForm, durationMinutes: parseInt(e.target.value) || 0 })}
+                    <input type="number" placeholder="Durée (min)" value={lessonForm.duration}
+                      onChange={e => setLessonForm({ ...lessonForm, duration: parseInt(e.target.value) || 0 })}
                       className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
                     <label className="flex items-center gap-2 text-sm text-gray-600">
                       <input type="checkbox" checked={lessonForm.isFree}
@@ -192,6 +217,43 @@ export default function InstructorCourseDetail() {
                 </form>
               )}
 
+              {showQuizForm === module.id && (
+                <form onSubmit={(e) => handleAddQuiz(e, module.id)}
+                  className="px-5 py-4 bg-gray-50 border-b border-gray-100 space-y-3">
+                  <h4 className="font-medium text-gray-700 text-sm">Nouveau quiz</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="text" required placeholder="Titre du quiz *" value={quizForm.title}
+                      onChange={e => setQuizForm({ ...quizForm, title: e.target.value })}
+                      className="col-span-2 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                    <textarea placeholder="Description (optionnel)" value={quizForm.description}
+                      onChange={e => setQuizForm({ ...quizForm, description: e.target.value })}
+                      className="col-span-2 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" rows={2}/>
+                    <input type="number" placeholder="Seuil de réussite (%)" value={quizForm.passMark}
+                      onChange={e => setQuizForm({ ...quizForm, passMark: parseInt(e.target.value) || 70 })}
+                      min="0" max="100"
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                    <input type="number" placeholder="Tentatives max" value={quizForm.attempts}
+                      onChange={e => setQuizForm({ ...quizForm, attempts: parseInt(e.target.value) || 3 })}
+                      min="1"
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                    <input type="number" placeholder="Durée limite (min)" value={quizForm.timeLimit}
+                      onChange={e => setQuizForm({ ...quizForm, timeLimit: parseInt(e.target.value) || 0 })}
+                      min="0"
+                      className="col-span-2 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" disabled={saving}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50">
+                      {saving ? '...' : 'Créer le quiz'}
+                    </button>
+                    <button type="button" onClick={() => setShowQuizForm(null)}
+                      className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50">
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              )}
+
               <div className="divide-y divide-gray-50">
                 {(!module.lessons || module.lessons.length === 0) && (
                   <p className="px-5 py-3 text-sm text-gray-400 italic">Aucune leçon — cliquez sur "+ Leçon"</p>
@@ -203,7 +265,7 @@ export default function InstructorCourseDetail() {
                       <span className="text-sm font-medium text-gray-700">{lesson.title}</span>
                       <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{lesson.type}</span>
                       {lesson.isFree && <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">Gratuit</span>}
-                      {lesson.durationMinutes > 0 && <span className="text-xs text-gray-400">{lesson.durationMinutes} min</span>}
+                      {lesson.duration > 0 && <span className="text-xs text-gray-400">{lesson.duration} min</span>}
                     </div>
                     <button onClick={() => handleDeleteLesson(lesson.id)}
                       className="text-red-400 hover:text-red-600 text-sm">Supprimer</button>

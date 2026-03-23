@@ -48,7 +48,7 @@ function AppRoutes() {
           <StudentDashboard />
         </PrivateRoute>
       } />
-      <Route path="/learn/:id" element={
+      <Route path="/learn/:courseId" element={
         <PrivateRoute roles={['ROLE_STUDENT']}>
           <StudentCourseView />
         </PrivateRoute>

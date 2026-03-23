@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import API from '../../services/api'
 import Navbar from '../../components/layout/Navbar'
 
 export default function QuizPage() {
   const { courseId } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const moduleIndex = parseInt(searchParams.get('module') || '0')
+  
+  const [course, setCourse] = useState(null)
   const [quizzes, setQuizzes] = useState([])
   const [selectedQuiz, setSelectedQuiz] = useState(null)
   const [attempt, setAttempt] = useState(null)
@@ -15,17 +19,31 @@ export default function QuizPage() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    API.get(`/quizzes/course/${courseId}`) // ✅ GET /api/quizzes/course/{courseId}
-      .then(res => setQuizzes(res.data))
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false))
+    const loadData = async () => {
+      try {
+        const [courseRes, quizzesRes] = await Promise.all([
+          API.get(`/courses/${courseId}`),
+          API.get(`/quizzes/course/${courseId}`)
+        ])
+        setCourse(courseRes.data)
+        setQuizzes(quizzesRes.data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
   }, [courseId])
+
+  const moduleQuizzes = quizzes.filter(q => q.moduleId === course?.modules?.[moduleIndex]?.id)
 
   const handleStartQuiz = async (quizId) => {
     try {
-      const res = await API.post(`/quiz-attempts/start/${quizId}`) // ✅ POST /api/quiz-attempts/start/{quizId}
+      const res = await API.post(`/quiz-attempts/start/${quizId}`)
       setAttempt(res.data)
-      const quizRes = await API.get(`/quizzes/${quizId}`) // ✅ GET /api/quizzes/{id}
+      const quizRes = await API.get(`/quizzes/${quizId}`)
       setSelectedQuiz(quizRes.data)
       setAnswers({})
       setResult(null)
@@ -41,7 +59,7 @@ export default function QuizPage() {
         questionId: parseInt(questionId),
         answer
       }))
-      const res = await API.post(`/quiz-attempts/${attempt.id}/submit`, { // ✅ POST /api/quiz-attempts/{attemptId}/submit
+      const res = await API.post(`/quiz-attempts/${attempt.id}/submit`, {
         answers: studentAnswers
       })
       setResult(res.data)
@@ -49,6 +67,15 @@ export default function QuizPage() {
     } catch (err) {
       console.error(err)
     } finally { setSubmitting(false) }
+  }
+
+  const handleGoBack = () => {
+    navigate(`/learn/${courseId}`)
+  }
+
+  const handleCompleteAndContinue = () => {
+    // Marquer le module comme complété et aller à la leçon suivante
+    navigate(`/learn/${courseId}`)
   }
 
   if (loading) return <div className="min-h-screen bg-gray-50"><Navbar /><div className="text-center py-20 text-gray-400">Chargement...</div></div>
@@ -64,10 +91,20 @@ export default function QuizPage() {
             <p className="text-5xl font-bold mb-3">{result.passed ? '🎉' : '😔'}</p>
             <h2 className="text-2xl font-bold mb-2">{result.passed ? 'Quiz réussi !' : 'Quiz échoué'}</h2>
             <p className="text-lg text-gray-600 mb-4">Score : <span className="font-bold">{result.score}%</span></p>
-            {!result.passed && result.attemptsRemaining > 0 && (
+            {result.passed ? (
+              <button onClick={handleCompleteAndContinue}
+                className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-green-700">
+                Continuer le cours →
+              </button>
+            ) : result.attemptsRemaining > 0 ? (
               <button onClick={() => { setResult(null); setSelectedQuiz(null) }}
                 className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700">
                 Réessayer ({result.attemptsRemaining} tentative{result.attemptsRemaining > 1 ? 's' : ''} restante{result.attemptsRemaining > 1 ? 's' : ''})
+              </button>
+            ) : (
+              <button onClick={handleGoBack}
+                className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700">
+                Retour au cours
               </button>
             )}
           </div>
@@ -141,15 +178,26 @@ export default function QuizPage() {
         {/* Liste des quiz */}
         {!attempt && !result && (
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Quiz du cours</h1>
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                Quiz du Module {moduleIndex + 1}
+              </h1>
+              {course?.modules?.[moduleIndex] && (
+                <p className="text-gray-600">{course.modules[moduleIndex].title}</p>
+              )}
+            </div>
 
-            {quizzes.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl border border-gray-100 text-gray-400">
-                Aucun quiz disponible pour ce cours
+            {moduleQuizzes.length === 0 ? (
+              <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
+                <p className="text-gray-400 mb-4">Aucun quiz disponible pour ce module</p>
+                <button onClick={handleGoBack}
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700">
+                  Retour au cours
+                </button>
               </div>
             ) : (
               <div className="space-y-4">
-                {quizzes.map(quiz => (
+                {moduleQuizzes.map(quiz => (
                   <div key={quiz.id} className="bg-white rounded-xl border border-gray-100 p-6">
                     <div className="flex items-start justify-between">
                       <div>

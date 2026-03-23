@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import API from '../../services/api'
 import Navbar from '../../components/layout/Navbar'
 import { useAuth } from '../../context/AuthContext'
 
 export default function CourseCatalog() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [courses, setCourses] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -13,17 +14,48 @@ export default function CourseCatalog() {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [enrolling, setEnrolling] = useState(null)
   const [message, setMessage] = useState('')
+  const [userEnrollments, setUserEnrollments] = useState([])
+  const [instructorCourses, setInstructorCourses] = useState([])
 
   useEffect(() => {
-    Promise.all([
-      API.get('/courses/published/all'), // ✅ URL correcte
-      API.get('/categories')
-    ]).then(([coursesRes, categoriesRes]) => {
-      setCourses(coursesRes.data)
-      setCategories(categoriesRes.data)
-    }).catch(err => console.error(err))
-    .finally(() => setLoading(false))
-  }, [])
+    const loadData = async () => {
+      try {
+        const [coursesRes, categoriesRes] = await Promise.all([
+          API.get('/courses/published/all'),
+          API.get('/categories')
+        ])
+        setCourses(coursesRes.data)
+        setCategories(categoriesRes.data)
+
+        // Récupérer les inscriptions si l'utilisateur est connecté
+        if (user) {
+          if (user?.role === 'ROLE_STUDENT') {
+            try {
+              const enrollmentsRes = await API.get('/enrollments/me')
+              setUserEnrollments(enrollmentsRes.data)
+            } catch (err) {
+              console.error('Erreur lors du chargement des inscriptions:', err)
+            }
+          }
+
+          if (user?.role === 'ROLE_INSTRUCTOR') {
+            try {
+              const myCoursesRes = await API.get('/courses/instructor/my-courses')
+              setInstructorCourses(myCoursesRes.data)
+            } catch (err) {
+              console.error('Erreur lors du chargement des cours instructeur:', err)
+            }
+          }
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [user])
 
   const filtered = courses.filter(c => {
     const matchSearch = c.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -32,21 +64,40 @@ export default function CourseCatalog() {
     return matchSearch && matchCategory
   })
 
+  const isEnrolled = (courseId) => userEnrollments.some(e => e.courseId === courseId)
+  const isOwnCourse = (courseId) => instructorCourses.some(c => c.id === courseId)
+  const getButtonAction = (course) => {
+    if (!user) return 'login'
+    if (user?.role === 'ROLE_INSTRUCTOR' && isOwnCourse(course.id)) return 'manage'
+    if (user?.role === 'ROLE_STUDENT' && isEnrolled(course.id)) return 'start'
+    return 'enroll'
+  }
+
   const handleEnroll = async (courseId) => {
     if (!user) {
-      window.location.href = '/login'
+      navigate('/login')
       return
     }
     setEnrolling(courseId)
     setMessage('')
     try {
-      await API.post('/enrollments', { courseId }) // ✅ URL correcte
+      await API.post('/enrollments', { courseId })
       setMessage('Inscription réussie !')
+      const enrollmentsRes = await API.get('/enrollments/me')
+      setUserEnrollments(enrollmentsRes.data)
     } catch (err) {
       setMessage(err.response?.data?.message || 'Erreur lors de l\'inscription')
     } finally {
       setEnrolling(null)
     }
+  }
+
+  const handleStartCourse = (courseId) => {
+    navigate(`/learn/${courseId}`)
+  }
+
+  const handleManageCourse = (courseId) => {
+    navigate(`/instructor/courses/${courseId}`)
   }
 
   return (
@@ -113,10 +164,38 @@ export default function CourseCatalog() {
                       className="flex-1 text-center border border-blue-600 text-blue-600 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition">
                       Voir le cours
                     </Link>
-                    <button onClick={() => handleEnroll(course.id)} disabled={enrolling === course.id}
-                      className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50">
-                      {enrolling === course.id ? '...' : "S'inscrire"}
-                    </button>
+                    {(() => {
+                      const action = getButtonAction(course)
+                      if (action === 'login') {
+                        return (
+                          <button onClick={() => navigate('/login')} disabled={enrolling === course.id}
+                            className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50">
+                            Se connecter
+                          </button>
+                        )
+                      } else if (action === 'manage') {
+                        return (
+                          <button onClick={() => handleManageCourse(course.id)} disabled={enrolling === course.id}
+                            className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50">
+                            Gérer
+                          </button>
+                        )
+                      } else if (action === 'start') {
+                        return (
+                          <button onClick={() => handleStartCourse(course.id)} disabled={enrolling === course.id}
+                            className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50">
+                            Commencer
+                          </button>
+                        )
+                      } else {
+                        return (
+                          <button onClick={() => handleEnroll(course.id)} disabled={enrolling === course.id}
+                            className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50">
+                            {enrolling === course.id ? '...' : "S'inscrire"}
+                          </button>
+                        )
+                      }
+                    })()}
                   </div>
                 </div>
               </div>
