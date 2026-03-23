@@ -6,6 +6,8 @@ import com.smartlearn.demo.dto.response.QuizDetailResponse;
 import com.smartlearn.demo.dto.response.QuizResponse;
 import com.smartlearn.demo.entity.Course;
 import com.smartlearn.demo.entity.Quiz;
+import com.smartlearn.demo.entity.Module;
+import com.smartlearn.demo.repository.ModuleRepository;
 import com.smartlearn.demo.repository.CourseRepository;
 import com.smartlearn.demo.repository.QuizRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +22,15 @@ public class QuizService {
 
     private final QuizRepository quizRepository;
     private final CourseRepository courseRepository;
+    private final ModuleRepository moduleRepository;
     private final QuestionService questionService;
 
     /**
      * Créer un quiz pour un cours
      */
     public QuizResponse createQuiz(CreateQuizRequest request) {
-        Course course = courseRepository.findById(request.getCourseId())
-                .orElseThrow(() -> new RuntimeException("Cours non trouvé : " + request.getCourseId()));
+        Module module = moduleRepository.findById(request.getModuleId())
+                .orElseThrow(() -> new RuntimeException("Module non trouvé : " + request.getModuleId()));
 
         Quiz quiz = Quiz.builder()
                 .title(request.getTitle())
@@ -35,7 +38,7 @@ public class QuizService {
                 .timeLimit(request.getTimeLimit())
                 .passMark(request.getPassMark())
                 .attempts(request.getAttempts() != null ? request.getAttempts() : 3)
-                .course(course)
+                .module(module)
                 .build();
 
         Quiz saved = quizRepository.save(quiz);
@@ -58,22 +61,22 @@ public class QuizService {
                 .timeLimit(quiz.getTimeLimit())
                 .passMark(quiz.getPassMark())
                 .attempts(quiz.getAttempts())
-                .courseId(quiz.getCourse().getId())
-                .courseName(quiz.getCourse().getTitle())
+                .courseId(quiz.getModule().getCourse().getId())
+                .courseName(quiz.getModule().getCourse().getTitle())
                 .questions(questions)
                 .totalPoints(calculateTotalPoints(quizId))
                 .build();
     }
 
     /**
-     * Obtenir les quiz d'un cours
+     * Obtenir les quiz d'un module
      */
-    public List<QuizResponse> getQuizzesByCourse(Long courseId) {
-        if (!courseRepository.existsById(courseId)) {
-            throw new RuntimeException("Cours non trouvé : " + courseId);
+    public List<QuizResponse> getQuizzesByModule(Long moduleId) {
+        if (!courseRepository.existsById(moduleId)) {
+            throw new RuntimeException("Module non trouvé : " + moduleId);
         }
 
-        return quizRepository.findByCourseId(courseId)
+        return quizRepository.findByCourseId(moduleId)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -134,8 +137,8 @@ public class QuizService {
                 .timeLimit(quiz.getTimeLimit())
                 .passMark(quiz.getPassMark())
                 .attempts(quiz.getAttempts())
-                .courseId(quiz.getCourse().getId())
-                .courseName(quiz.getCourse().getTitle())
+                .courseId(quiz.getModule().getCourse().getId())
+                .courseName(quiz.getModule().getCourse().getTitle())
                 .build();
     }
 }

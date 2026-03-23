@@ -41,6 +41,16 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.getEnrollmentsByCourse(courseId));
     }
 
+    /*
+    *Annuler une inscription
+    */
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+    public ResponseEntity<Void> cancelEnrollment(@PathVariable Long id) {
+        enrollmentService.cancelEnrollment(id);
+        return ResponseEntity.noContent().build();
+    }
     // ══ ROUTES GÉNÉRIQUES (APRÈS LES ROUTES SPÉCIFIQUES) ══
 
     @GetMapping("/{id}")
@@ -62,11 +72,11 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollmentService.updateProgress(id, progress));
     }
 
-    @PostMapping("/{id}/cancel")
-    @PreAuthorize("hasAuthority('ROLE_STUDENT')")
-    public ResponseEntity<EnrollmentResponse> cancelEnrollment(@PathVariable Long id) {
-        return ResponseEntity.ok(enrollmentService.cancelEnrollment(id));
-    }
+  //  @PostMapping("/{id}/cancel")
+  //  @PreAuthorize("hasAuthority('ROLE_STUDENT')")
+  //  public ResponseEntity<EnrollmentResponse> cancelEnrollment(@PathVariable Long id) {
+  //      return ResponseEntity.ok(enrollmentService.cancelEnrollment(id));
+  //  }
 
     @PostMapping("/{id}/refund")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")

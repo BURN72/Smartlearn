@@ -15,9 +15,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -63,6 +66,17 @@ public class AdminController {
         return ResponseEntity.ok(adminService.toggleUserStatus(userId));
     }
 
+    /**
+     * Modifier le rôle d'un utilisateur
+     */
+
+    @PutMapping("/users/{userId}/role")
+    public ResponseEntity<UserManagementResponse> updateUserRole(
+        @PathVariable Long userId, 
+        @RequestBody Map<String, String> payload) {
+        String role = payload.get("role");
+        return ResponseEntity.ok(adminService.updateUserRole(userId, role));
+    }
     // ══ Course Analytics ══
 
     /**

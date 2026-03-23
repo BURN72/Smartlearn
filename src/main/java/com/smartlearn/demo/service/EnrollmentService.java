@@ -143,15 +143,32 @@ public class EnrollmentService {
 
     /**
      * Annuler une inscription
+    *
+    *public EnrollmentResponse cancelEnrollment(Long enrollmentId) {
+     *   Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+       *         .orElseThrow(() -> new RuntimeException("Inscription non trouvée : " + enrollmentId));
+*
+       * enrollment.setStatus(EnrollmentStatus.ANNULE);
+       * Enrollment updated = enrollmentRepository.save(enrollment);
+        *return mapToResponse(updated);
+    *} 
+        */
+
+    /*
+    *Annuler une inscription
      */
-    public EnrollmentResponse cancelEnrollment(Long enrollmentId) {
+
+    public void cancelEnrollment(Long enrollmentId) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new RuntimeException("Inscription non trouvée : " + enrollmentId));
 
+        //verifier si l'inscription n'est pas deja completee
+        if (enrollment.getStatus() == EnrollmentStatus.TERMINE) {
+            throw new RuntimeException("Inscription déjà terminée, impossible de l'annuler.");
+        }
         enrollment.setStatus(EnrollmentStatus.ANNULE);
-        Enrollment updated = enrollmentRepository.save(enrollment);
-        return mapToResponse(updated);
-    }
+        enrollmentRepository.save(enrollment);
+        }
 
     /**
      * Rembourser une inscription

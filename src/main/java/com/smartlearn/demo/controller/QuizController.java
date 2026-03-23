@@ -42,11 +42,11 @@ public class QuizController {
     // ══ ROUTES SPÉCIFIQUES (AVANT LES ROUTES GÉNÉRIQUES) ══
 
     /**
-     * Obtenir les quiz d'un cours
+     * Obtenir les quiz d'un module
      */
-    @GetMapping("/course/{courseId}")
-    public ResponseEntity<List<QuizResponse>> getQuizzesByCourse(@PathVariable Long courseId) {
-        return ResponseEntity.ok(quizService.getQuizzesByCourse(courseId));
+    @GetMapping("/module/{moduleId}")
+    public ResponseEntity<List<QuizResponse>> getQuizzesByModule(@PathVariable Long moduleId) {
+        return ResponseEntity.ok(quizService.getQuizzesByModule(moduleId));
     }
 
     // ══ ROUTES GÉNÉRIQUES (APRÈS LES ROUTES SPÉCIFIQUES) ══

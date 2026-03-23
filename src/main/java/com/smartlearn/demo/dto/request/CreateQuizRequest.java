@@ -20,6 +20,6 @@ public class CreateQuizRequest {
     @NotNull(message = "Le nombre maximum de tentatives est obligatoire")
     private Integer attempts;
 
-    @NotNull(message = "L'ID du cours est obligatoire")
-    private Long courseId;
+    @NotNull(message = "L'ID du module est obligatoire")
+    private Long moduleId;
 }

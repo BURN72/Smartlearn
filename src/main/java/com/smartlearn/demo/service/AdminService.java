@@ -165,6 +165,26 @@ public class AdminService {
         return mapUserToResponse(updated);
     }
 
+
+    /**
+    * Modifier le rôle d'un utilisateur
+    */
+    public UserManagementResponse updateUserRole(Long userId, String roleStr) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé : " + userId));
+                
+        //Valider le rôle
+        Role role;
+        try {
+                role = Role.valueOf(roleStr);
+        } catch (IllegalArgumentException e) {
+             throw new RuntimeException("Rôle invalide : " + roleStr);
+        }
+        user.setRole(role);
+        userRepository.save(user);
+        return mapUserToResponse(user);
+        }
+
     // ══ Course Analytics ══
 
     /**
@@ -325,7 +345,7 @@ public class AdminService {
         long totalQuizzes = quizRepository.findByCourseId(course.getId()).size();
 
         double averageQuizPassRate = quizAttemptRepository.findAll().stream()
-                .filter(qa -> qa.getQuiz().getCourse().getId().equals(course.getId()))
+                .filter(qa -> qa.getQuiz().getModule().getCourse().getId().equals(course.getId()))
                 .filter(qa -> qa.getPassed() != null)
                 .mapToDouble(qa -> qa.getPassed() ? 1.0 : 0.0)
                 .average()
