@@ -342,7 +342,7 @@ public class AdminService {
                 .orElse(0.0);
 
         long totalLessons = lessonRepository.findByModuleCourseId(course.getId()).size();
-        long totalQuizzes = quizRepository.findByCourseId(course.getId()).size();
+        long totalQuizzes = quizRepository.findByModuleCourseId(course.getId()).size();
 
         double averageQuizPassRate = quizAttemptRepository.findAll().stream()
                 .filter(qa -> qa.getQuiz().getModule().getCourse().getId().equals(course.getId()))

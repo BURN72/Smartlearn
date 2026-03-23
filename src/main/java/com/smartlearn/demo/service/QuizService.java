@@ -72,11 +72,11 @@ public class QuizService {
      * Obtenir les quiz d'un module
      */
     public List<QuizResponse> getQuizzesByModule(Long moduleId) {
-        if (!courseRepository.existsById(moduleId)) {
+        if (!moduleRepository.existsById(moduleId)) {
             throw new RuntimeException("Module non trouvé : " + moduleId);
         }
 
-        return quizRepository.findByCourseId(moduleId)
+        return quizRepository.findByModuleId(moduleId)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
